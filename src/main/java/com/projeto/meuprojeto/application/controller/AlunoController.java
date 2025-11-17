@@ -17,6 +17,11 @@ public class AlunoController {
         this.alunoService = alunoService;
     }
 
+    @GetMapping("/health")
+    public String health() {
+        return "API de Alunos está no ar!";
+    }
+
     @PostMapping
     public ResponseEntity<AlunoDTO> criar(@RequestBody AlunoDTO dto) {
         return ResponseEntity.ok(alunoService.salvar(dto));
