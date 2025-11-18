@@ -16,6 +16,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -86,5 +87,12 @@ class AlunoControllerTest {
                                 .accept(MediaType.APPLICATION_JSON))
                                 .andExpect(status().isOk())
                                 .andExpect(jsonPath("$.id").value(1L));
+        }
+
+        @Test
+        void deveRetornarHealthDaApi() throws Exception {
+                mockMvc.perform(get("/alunos/health"))
+                                .andExpect(status().isOk())
+                                .andExpect(content().string("API de Alunos está no ar!"));
         }
 }
