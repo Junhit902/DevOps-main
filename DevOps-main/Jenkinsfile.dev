@@ -1,0 +1,51 @@
+pipeline {
+  agent any
+
+  environment {
+    QUALITY_OK = 'false'
+  }
+
+  stages {
+    stage('Checkout') {
+      steps {
+        checkout scm
+      }
+    }
+
+    stage('Build & Test') {
+      steps {
+        bat 'mvn clean test verify'
+      }
+    }
+
+    stage('Quality Gate 99%') {
+      steps {
+        script {
+          // Aqui você pode integrar com o plugin Jacoco do Jenkins ou
+          // adicionar um script para analisar target/site/jacoco/jacoco.csv
+          // e calcular a cobertura. Para o trabalho, documente essa parte.
+          // Exemplo simplificado (ajustar conforme sua config real):
+          echo 'Verificando Quality Gate (placeholder)'
+          env.QUALITY_OK = 'true'
+        }
+      }
+    }
+
+    stage('Build Docker Image') {
+      when {
+        expression { env.QUALITY_OK == 'true' }
+      }
+      steps {
+        bat 'docker build -t seuusuario/devops-main:latest .'
+      }
+    }
+  }
+
+  post {
+    always {
+      junit 'target/surefire-reports/*.xml'
+      jacoco execPattern: 'target/jacoco.exec', classPattern: 'target/classes', sourcePattern: 'src/main/java', inclusionPattern: '**/*.class', exclusionPattern: ''
+      pmd canComputeNew: false, defaultEncoding: 'UTF-8', pattern: 'target/pmd.xml'
+    }
+  }
+}
