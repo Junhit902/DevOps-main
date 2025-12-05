@@ -12,6 +12,14 @@ pipeline {
       }
     }
 
+    stage('Trivy FS Scan (Pré-build)') {
+      steps {
+        // Scan de vulnerabilidades no código/projeto (filesystem)
+        // Requer Trivy instalado no agente Jenkins
+        bat 'trivy fs --exit-code 1 --severity HIGH,CRITICAL --quiet . || exit /b 1'
+      }
+    }
+
     stage('Build & Test') {
       steps {
         bat 'mvn clean test verify'
@@ -21,11 +29,9 @@ pipeline {
     stage('Quality Gate 99%') {
       steps {
         script {
-          // Aqui você pode integrar com o plugin Jacoco do Jenkins ou
-          // adicionar um script para analisar target/site/jacoco/jacoco.csv
-          // e calcular a cobertura. Para o trabalho, documente essa parte.
-          // Exemplo simplificado (ajustar conforme sua config real):
-          echo 'Verificando Quality Gate (placeholder)'
+          // O Jacoco já está configurado no pom.xml com minimum 0.99.
+          // Se a cobertura for menor que 99%, o mvn verify falha e o pipeline para aqui.
+          echo 'Quality Gate Jacoco 99% garantido via maven-jacoco-plugin'
           env.QUALITY_OK = 'true'
         }
       }
@@ -36,7 +42,17 @@ pipeline {
         expression { env.QUALITY_OK == 'true' }
       }
       steps {
-        bat 'docker build -t seuusuario/devops-main:latest .'
+        bat 'docker build -t devops-main:latest .'
+      }
+    }
+
+    stage('Trivy Image Scan (Pós-build)') {
+      when {
+        expression { env.QUALITY_OK == 'true' }
+      }
+      steps {
+        // Scan de vulnerabilidades na imagem Docker construída
+        bat 'trivy image --exit-code 1 --severity HIGH,CRITICAL --quiet devops-main:latest || exit /b 1'
       }
     }
   }
